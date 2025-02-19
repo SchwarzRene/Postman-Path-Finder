@@ -7,7 +7,7 @@
  The algotihm uses K-Means to cluster the houses based on how time consuming an area is. It then generates a path based on the shortest decisions. This path is then optimized to find the shortest path. A visualization is added to show the movements of the agents.
 
 ## Animation
-
+![Agent Route Animation](/animations/smallAnimation.gif)
 
 
 ## Requirements

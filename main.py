@@ -171,6 +171,11 @@ class OptimizedHouseRoutePlanner:
         and leave a trail behind. Additionally, when an agent stands at a house (i.e., when it has
         arrived), it dwells there for a fixed duration and its marker color changes (to orange) to indicate
         that it is "dropping" something off.
+        
+        Modification: if a house has already been visited (i.e. an agent has already dwelled there),
+        then a subsequent agent arriving at that same house will not incur the dwell time and can move
+        on immediately.
+        
         A time counter is displayed based on a constant speed factor.
         """
         if not self.best_paths:
@@ -215,6 +220,9 @@ class OptimizedHouseRoutePlanner:
         frames_per_weight = 5
         dwell_frames = frames_per_weight  # Extra frames to dwell at each house.
 
+        # Global set to record houses that have been visited (and hence already dwelled at)
+        visited_houses = set()
+
         # Build the full interpolated paths for each agent.
         # Each position is stored as (x, y, is_dwell)
         agent_full_paths = []
@@ -237,10 +245,16 @@ class OptimizedHouseRoutePlanner:
                         x = p_start[0] + t * (p_end[0] - p_start[0])
                         y = p_start[1] + t * (p_end[1] - p_start[1])
                         positions.append((x, y, False))
-                # Add dwell frames at the arrival house.
+                # Instead of always dwelling at the target house, check if it was visited before.
                 house_coord = self.houses[target]
-                for d in range(dwell_frames):
-                    positions.append((house_coord[0], house_coord[1], True))
+                if target not in visited_houses:
+                    # First time visit: add full dwell frames.
+                    for d in range(dwell_frames):
+                        positions.append((house_coord[0], house_coord[1], True))
+                    visited_houses.add(target)
+                else:
+                    # Already visited: add only one frame so that the agent does not consume extra time.
+                    positions.append((house_coord[0], house_coord[1], False))
             agent_full_paths.append(positions)
 
         max_frames = max(len(p) for p in agent_full_paths)
@@ -280,7 +294,7 @@ class OptimizedHouseRoutePlanner:
 
         anim = FuncAnimation(fig, update, frames=max_frames, interval=200, blit=True)
 
-        anim.save( "agent_route_animation.gif", writer="pillow", fps=5)
+        anim.save("agent_route_animation.gif", writer="pillow", fps=5)
         
         ax.legend()
         plt.show()
@@ -529,10 +543,10 @@ if __name__ == '__main__':
     # Uncomment one or more of the following to run the desired example.
     
     # Run the five-house grid (smallest grid with full annotations)
-    #main_five_houses()
+    #ain_five_houses()
     
     # Run the small grid example (10 houses, 2 agents)
-    main_small_grid()
+    #main_small_grid()
     
     # Run the complex grid example (2000 houses, 20 agents)
-    #main_complex_grid()
+    main_complex_grid()
